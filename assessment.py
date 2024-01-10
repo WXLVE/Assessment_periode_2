@@ -3,10 +3,22 @@ import regex as re
 import matplotlib.pyplot as plt
 from tkinter import filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from tkinter import scrolledtext
+from tkinter import scrolledtext, messagebox
+
 
 class BioAPP:
+    """
+    Bioinformatics App class for analyzing UniProtKB data.
+    """
+
     def __init__(self, master):
+        """
+        Initialize the BioAPP.
+
+        Args:
+            master (tk.Tk): The root Tkinter window.
+        """
+
         self.master = master
         self.master.title("Bioinformatics App")
 
@@ -30,7 +42,7 @@ class BioAPP:
 
         self.radio_a = tk.Radiobutton(
             master,
-            text="Per organisme: aantal eiwitten met consensus sequentie",
+            text="Per organisme: aantal eiwit sequenties (top 10)",
             variable=self.option_var,
             value="a",
         )
@@ -60,25 +72,32 @@ class BioAPP:
         self.analyze_button = tk.Button(
             self.master, text="Analyze Data", command=self.analyze_data
         )
-        
+
         self.analyze_button.pack()
         self.analyze_button["state"] = "disabled"  # Disabled
 
-        self.text_output = scrolledtext.ScrolledText(master, wrap="none", height=20, width=80)
-        self.text_output.pack(pady=20)
-
+        self.text_output = scrolledtext.ScrolledText(
+            master, wrap="none", height=20, width=80
+        )
+        self.text_output.pack(side=tk.LEFT, fill=tk.BOTH)
 
         self.plot_frame = tk.Frame(master)
-        self.plot_frame.pack()
+        self.plot_frame.pack(pady=20, side=tk.RIGHT, fill=tk.BOTH)
 
     def browse_file(self):
+        """
+        Open a file dialog to browse and select a file.
+
+        Returns:
+            self.entry: filled with the filepath
+        """
         filepath = filedialog.askopenfilename(
             filetypes=[("Tekstbestanden", "*.txt"), ("Alle bestanden", "*.*")]
         )
         if filepath:
-            self.entry.delete(0, tk.END)
-            self.entry.insert(0, filepath)
             self.filepath = filepath
+            self.entry.delete(0, tk.END)
+            return self.entry.insert(0, filepath)
 
     def extract_entries(self):
         """
@@ -152,8 +171,7 @@ class BioAPP:
             self.sequence_headers.append(entry.get("SQ Header", ""))
             self.sequences.append(entry.get("SQ", ""))
 
-        # for i in self.sequences[:10]:
-        #     print(i)
+        return
 
     # FINISHED: Load uniprotKB files and parse data
     def load_uniprotkb_file(self):
@@ -179,15 +197,27 @@ class BioAPP:
                 self.radio_b["state"] = "disabled"
                 self.radio_c["state"] = "disabled"
 
+        # Exceptions
         except FileNotFoundError:
+            messagebox.showerror("Error", f"File '{self.filepath}' not found!")
             print(f"Error: File '{self.filepath}' not Found!.")
         except Exception as e:
+            messagebox.showerror("Error", f"Error while reading file: {e}")
             print(f"Error while reading file: {e}")
 
     def find_consensus_sequences(self):
+        """
+        Find consensus sequences in UniProtKB entries using regex.
+
+        Returns:
+            list: List of tuples containing organism and matching sequences.
+        """
+
         # Zoeken naar consensus sequenties met regex
         prosite_pattern = r"[GSTNP][A-Z]{6}[FYVHR][IVN][KEP][A-Z]G[STIVKRQ]Y[DNQKRMV][EP][A-Z]{3}[LIMVA]"
-        regex_pattern = r"[GSTNP]x{6}[FYVHR][IVN][KEP]xG[STIVKRQ]Y[DNQKRMV][EP]x(3)[LIMVA]"
+        regex_pattern = (
+            r"[GSTNP]x{6}[FYVHR][IVN][KEP]xG[STIVKRQ]Y[DNQKRMV][EP]x(3)[LIMVA]"
+        )
         # Convert PROSITE pattern to regex pattern
         # regex_pattern =
 
@@ -198,15 +228,13 @@ class BioAPP:
         #     matchs = re.findall(prosite_pattern, seq)
         #     for m in matchs:
         #         matches.append(m)
-                
+
         for i in self.entries:
-            match_sequences = [match.group() for match in re.finditer(prosite_pattern, i["SQ"])]
+            match_sequences = set(re.findall(prosite_pattern, i["SQ"]))
             if match_sequences:
                 matches.append((i["OS"], match_sequences))
 
         return matches
-        
-
 
     def extract_data(self):
         """
@@ -263,13 +291,9 @@ class BioAPP:
 
         option = self.option_var.get()
 
-
-        
-
         if option == "a":
             # Laat zien per organisme hoeveel eiwitten de bijbehorende consensus sequentie hebben.
             try:
-
                 # a. Per organisme, tell how many proteins have the corresponding consensus sequence.
                 organism_protein_count = {}
 
@@ -285,15 +309,18 @@ class BioAPP:
                 # a. Print protein count per organism
                 # print("a. Protein count per organism:")
                 # for organism, count in organism_protein_count.items():
-                    # print(f"{organism}: {count} proteins")
-                    
-                    
-                top_10_organisms = dict(sorted(organism_protein_count.items(), key=lambda item: item[1], reverse=True)[:10])
+                # print(f"{organism}: {count} proteins")
 
-
+                top_10_organisms = dict(
+                    sorted(
+                        organism_protein_count.items(),
+                        key=lambda item: item[1],
+                        reverse=True,
+                    )[:10]
+                )
 
                 self.show_plot(
-                    "Aantal eiwitten per organisme met consensus sequentie",
+                    "Top 10 Eiwit Sequenties per organisme",
                     "Organisme",
                     "Aantal eiwitten",
                     top_10_organisms,
@@ -317,7 +344,9 @@ class BioAPP:
                 for organism, consensus_sequences in self.consensus_sequences:
                     if organism[0] not in organism_consensus_sequences:
                         organism_consensus_sequences[organism[0]] = []
-                    organism_consensus_sequences[organism[0]].extend(consensus_sequences)
+                    organism_consensus_sequences[organism[0]].extend(
+                        consensus_sequences
+                    )
 
                 # Toon consensus sequenties per organisme in de Text-widget
                 self.text_output.delete(1.0, tk.END)  # Verwijder eerdere inhoud
@@ -325,23 +354,27 @@ class BioAPP:
                 #                 self.text_output.insert(tk.END, f"{organism}: {len(sequences)} consensus sequences\n")
                 #                 for i, sequence in enumerate(sequences, start=1):
                 #                     self.text_output.insert(tk.END, f"  Consensus Sequence {i}: {sequence}\n")
-                                    
-                                    
+
+                # show all of the organisms and found sequences in the Textfield on Main App.
                 for organism, sequences in organism_consensus_sequences.items():
-                    self.text_output.insert(tk.END, f"{organism}: {len(sequences)} consensus sequences\n")
-                    
+                    # Makes sure for no double sequences in 'sequences' list
+                    sequences = set(sequences)
+                    output_text = f"{organism}: {len(sequences)} consensus sequences\n"
+
                     for i, sequence in enumerate(sequences, start=1):
                         if i <= 20:
-                            self.text_output.insert(tk.END, f"  Consensus Sequence {i}: {sequence}\n")
+                            output_text += f"  Consensus Sequence {i}: {sequence}\n"
                         else:
                             break
 
+                    self.text_output.insert(tk.END, output_text)
+
             # b. Print consensus sequences per organism
-            # for organism, sequence_count in organism_consensus_sequences.items():
-            #     print(f"{organism}: {sequence_count} consensus sequences")
+            for organism, sequence_count in organism_consensus_sequences.items():
+                print(f"{organism}: {len(sequence_count)} consensus sequences")
 
             # Convert the dictionary to a list of tuples
-            data_for_plot = dict(organism_consensus_sequences.items())
+            # data_for_plot = dict(organism_consensus_sequences.items())
 
             # self.show_plot(
             #     "Aantal gevonden consensus sequenties per organisme",
@@ -354,7 +387,7 @@ class BioAPP:
 
         elif option == "c":
             # Toon per accessiecode de bijbehorende sequentielengte
-            
+
             # c. Per accessiecode, show the corresponding sequence length.
             accession_sequence_length = {}
 
@@ -363,37 +396,56 @@ class BioAPP:
                 accession = entry.get("AC", [""])[0]
                 sequence = entry.get("SQ", [""])
 
-            # c. Show sequence length per accession code
-            if accession and sequence:
-                sequence_length = len(sequence)
-                accession_sequence_length[accession] = sequence_length
+                # c. Show sequence length per accession code
+                if accession and sequence:
+                    sequence_length = len(sequence)
+                    accession_sequence_length[accession] = sequence_length
 
             # c. Print sequence length per accession code
-            # print("\nc. Sequence length per accession code:")
-            # for accession, length in accession_sequence_length.items():
-            #     print(f"{accession}: {length} amino acids")
+            print("\nc. Sequence length per accession code:")
+            for accession, length in accession_sequence_length.items():
+                print(f"{accession}: {length} amino acids")
 
-            self.show_plot(
-                "Sequentielengte per accessiecode",
-                "Accessiecode",
-                "Sequentielengte",
-                accession_sequence_length,
-                1,
-                3,
-            )
+            return self.update_text_widget(accession_sequence_length)
+            # self.show_plot(
+            #     "Sequentielengte per accessiecode",
+            #     "Accessiecode",
+            #     "Sequentielengte",
+            #     accession_sequence_length,
+            #     1,
+            #     3,
+            # )
 
-    # MAIN DEF FOR SHOWING PLOTS IN MAIN.APP
+    # Update Text widget with sequence length per accession code
+    def update_text_widget(self, data):
+        """
+        Update the text widget with sequence length per accession code.
+
+        Args:
+            data (dict): Dictionary containing accession codes and sequence lengths.
+
+        Returns:
+            None
+        """
+        self.text_output.delete(1.0, tk.END)  # Clear existing text
+
+        # Print sequence length per accession code
+        self.text_output.insert(tk.END, "Sequentielengte per accessiecode:\n")
+        for accession, length in data.items():
+            self.text_output.insert(tk.END, f"{accession}: {length} amino acids\n")
+
+    # Show Plot in Main App (Bio App)
     def show_plot(self, title, x_label, y_label, data, row, col):
         # Maak de plot
         fig, ax = plt.subplots()
+        fig.set_figheight(7)
         ax.bar(data.keys(), data.values())
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
         ax.set_title(title)
         for tick in ax.get_xticklabels():
             tick.set_fontsize(8)
-        plt.xticks(rotation=45, ha='right')
-
+        plt.xticks(rotation=25, ha="right")
 
         # Toon de plot in het GUI-venster
         canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
@@ -404,6 +456,8 @@ class BioAPP:
         toolbar.update()
         # canvas.get_tk_widget().pack()
         canvas.draw()
+
+        return
 
 
 # Initialisatie
