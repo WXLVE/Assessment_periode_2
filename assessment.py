@@ -99,7 +99,7 @@ class BioAPP:
             self.entry.delete(0, tk.END)
             return self.entry.insert(0, filepath)
 
-    def extract_entries(self):
+    def process_entries_from_file(self):
         """
         Extracts UniProtKB entries from a file.
 
@@ -109,20 +109,12 @@ class BioAPP:
         Returns:
             list: List of dictionaries representing UniProtKB entries.
         """
-        self.ids = []
-        self.ac_numbers = []
-        self.dates = []
-        self.rec_names = []
-        self.gn_names = []
-        self.os_names = []
-        self.sequence_headers = []
-        self.sequences = []
-
         entries = []
         sequence_header = ""
         sequence = ""
         in_sequence_block = False
-
+        
+        
         with open(self.filepath, "r") as file:
             entry = {}
             for line in file:
@@ -152,6 +144,26 @@ class BioAPP:
                     if key not in entry:
                         entry[key] = []
                     entry[key].append(value)
+                    
+            self.entries = entries
+            return entries
+        
+
+
+    def extract_entries(self):
+
+        self.ids = []
+        self.ac_numbers = []
+        self.dates = []
+        self.rec_names = []
+        self.gn_names = []
+        self.os_names = []
+        self.sequence_headers = []
+        self.sequences = []
+
+
+
+        entries = self.process_entries_from_file()
 
         # return entries
 
@@ -177,7 +189,6 @@ class BioAPP:
     def load_uniprotkb_file(self):
         try:
             self.extract_entries()
-            self.entries = self.extract_data()
             self.consensus_sequences = self.find_consensus_sequences()
             if self.filepath:
                 print(f"File Path: {self.filepath}")
@@ -235,53 +246,7 @@ class BioAPP:
         except re.error as e:
             print(f"Regex error: {e}")
 
-    def extract_data(self):
-        """
-        Extracts UniProtKB entries from a file.
 
-        Args:
-            file_path (str): The path to the UniProtKB text file.
-
-        Returns:
-            list: List of dictionaries representing UniProtKB entries.
-        """
-
-        entries = []
-        sequence_header = ""
-        sequence = ""
-        in_sequence_block = False
-
-        with open(self.filepath, "r") as file:
-            entry = {}
-            for line in file:
-                line = line.strip()
-
-                if line.startswith("//"):
-                    # Add sequence header and sequence to the entry
-                    entry["SQ Header"] = sequence_header.strip()
-                    entry["SQ"] = sequence.strip()
-                    entries.append(entry)
-
-                    # Reset variables for the next entry
-                    entry = {}
-                    sequence_header = ""
-                    sequence = ""
-                    in_sequence_block = False
-                elif line.startswith("SQ   "):
-                    # Start of the sequence block, set in_sequence_block flag
-                    in_sequence_block = True
-                    sequence_header = line[5:].strip()
-                elif in_sequence_block:
-                    # If in the sequence block, append line to the sequence
-                    sequence += line.strip().replace(" ", "")
-                else:
-                    # If not in the sequence block, process the line as a regular entry field
-                    key, value = line[:5].strip(), line[5:].strip()
-                    if key not in entry:
-                        entry[key] = []
-                    entry[key].append(value)
-
-        return entries
 
     # FINISHED
     def analyze_data(self):
@@ -315,7 +280,7 @@ class BioAPP:
         """
 
         try:
-            # a. Per organisme, tell how many proteins have the corresponding consensus sequence.
+            # a. Per organisme, count how many proteins the corresponding consensus sequence has.
             organism_protein_count = {}
 
             for entry in self.entries:
@@ -336,9 +301,9 @@ class BioAPP:
             )
 
             self.show_plot(
-                "Top 10 Eiwit Sequenties per organisme",
-                "Organisme",
-                "Aantal eiwitten",
+                "Top 10 Protein Sequences per organism",
+                "Organism",
+                "Amount of Proteins",
                 top_10_organisms,
                 1,
                 1,
@@ -369,7 +334,7 @@ class BioAPP:
                     organism_consensus_sequences[organism[0]] = []
                 organism_consensus_sequences[organism[0]].extend(consensus_sequences)
 
-            # Toon consensus sequenties per organisme in de Text-widget
+            # Show consensus sequenties per organisme in de Text-widget
             self.text_output.delete(1.0, tk.END)  # Verwijder eerdere inhoud
 
             # show all of the organisms and found sequences in the Textfield on Main App.
@@ -390,8 +355,6 @@ class BioAPP:
         for organism, sequence_count in organism_consensus_sequences.items():
             print(f"{organism}: {len(sequence_count)} consensus sequences")
 
-        # Convert the dictionary to a list of tuples
-        # data_for_plot = dict(organism_consensus_sequences.items())
 
         # if you would like to see a plot, uncomment the next part
         # self.show_plot(
@@ -454,7 +417,7 @@ class BioAPP:
         self.text_output.delete(1.0, tk.END)  # Clear existing text
 
         # Print sequence length per accession code
-        self.text_output.insert(tk.END, "Sequentielengte per accessiecode:\n")
+        self.text_output.insert(tk.END, "Sequence length per accessiecode:\n")
         for accession, length in data.items():
             self.text_output.insert(tk.END, f"{accession}: {length} amino acids\n")
 
@@ -490,9 +453,6 @@ class BioAPP:
         canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
         canvas.get_tk_widget().grid(row=row, column=col)
         # fig.tight_layout()
-        # Voeg de navigatietoolbar toe voor zoomen en verschuiven
-        toolbar = NavigationToolbar2Tk(fig, self.plot_frame)
-        toolbar.update()
         # canvas.get_tk_widget().pack()
         canvas.draw()
 
