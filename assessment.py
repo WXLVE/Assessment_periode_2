@@ -385,14 +385,14 @@ class BioAPP:
         self.update_text_widget(accession_sequence_length)
 
         # If you would like to see a plot, uncomment the next part:
-        self.show_plot(
-            "Sequentielengte per accessiecode",
-            "Accessiecode",
-            "Sequentielengte",
-            accession_sequence_length,
-            1,
-            3,
-        )
+        # self.show_plot(
+        #     "Sequentielengte per accessiecode",
+        #     "Accessiecode",
+        #     "Sequentielengte",
+        #     accession_sequence_length,
+        #     1,
+        #     3,
+        # )
 
     # Update Text widget with sequence length per accession code
     def update_text_widget(self, data):
