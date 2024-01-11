@@ -113,8 +113,7 @@ class BioAPP:
         sequence_header = ""
         sequence = ""
         in_sequence_block = False
-        
-        
+
         with open(self.filepath, "r") as file:
             entry = {}
             for line in file:
@@ -144,14 +143,11 @@ class BioAPP:
                     if key not in entry:
                         entry[key] = []
                     entry[key].append(value)
-                    
+
             self.entries = entries
             return entries
-        
-
 
     def extract_entries(self):
-
         self.ids = []
         self.ac_numbers = []
         self.dates = []
@@ -160,8 +156,6 @@ class BioAPP:
         self.os_names = []
         self.sequence_headers = []
         self.sequences = []
-
-
 
         entries = self.process_entries_from_file()
 
@@ -211,7 +205,9 @@ class BioAPP:
             messagebox.showerror("Error", f"File '{self.filepath}' not found!")
             print(f"Error: File '{self.filepath}' not Found!.")
         except IsADirectoryError:
-            messagebox.showerror("Error", f"'{self.filepath}' is a directory, not a file.")
+            messagebox.showerror(
+                "Error", f"'{self.filepath}' is a directory, not a file."
+            )
             print(f"Error: '{self.filepath}' is a directory, not a file.")
         except PermissionError:
             messagebox.showerror("Error", f"No permission to access '{self.filepath}'.")
@@ -241,12 +237,9 @@ class BioAPP:
                     matches.append((i["OS"], match_sequences))
 
             return matches
-    
-    
+
         except re.error as e:
             print(f"Regex error: {e}")
-
-
 
     # FINISHED
     def analyze_data(self):
@@ -355,7 +348,6 @@ class BioAPP:
         for organism, sequence_count in organism_consensus_sequences.items():
             print(f"{organism}: {len(sequence_count)} consensus sequences")
 
-
         # if you would like to see a plot, uncomment the next part
         # self.show_plot(
         #     "Aantal gevonden consensus sequenties per organisme",
@@ -374,7 +366,6 @@ class BioAPP:
             None
         """
 
-        
         accession_sequence_length = {}
 
         for entry in self.entries:
