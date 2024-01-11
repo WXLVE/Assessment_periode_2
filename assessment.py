@@ -22,19 +22,19 @@ class BioAPP:
         self.master = master
         self.master.title("Bioinformatics App")
 
-        self.label = tk.Label(master, text="Selecteer het invoerbestand:")
+        self.label = tk.Label(master, text="Select Input file:")
         self.label.pack(pady=10)
 
         self.entry = tk.Entry(master, width=40, text="Input Filepath goes here")
         self.entry.pack(pady=10)
 
         self.browse_button = tk.Button(
-            master, text="Bladeren", command=self.browse_file
+            master, text="Browse", command=self.browse_file
         )
         self.browse_button.pack(pady=10)
 
         self.load_button = tk.Button(
-            master, text="Inladen", command=self.load_uniprotkb_file
+            master, text="Load File", command=self.load_uniprotkb_file
         )
         self.load_button.pack(pady=20)
 
