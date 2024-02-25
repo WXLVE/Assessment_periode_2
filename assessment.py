@@ -224,7 +224,8 @@ class BioAPP:
         # Exceptions
         except FileNotFoundError:
             messagebox.showerror("Error",
-                                 f"File '{self.filepath}' not found!")
+                                 f"File '{self.filepath}' "
+                                 f"not found!")
             print(f"Error: File '{self.filepath}' not Found!.")
         except IsADirectoryError:
             messagebox.showerror(
@@ -295,8 +296,8 @@ class BioAPP:
 
     def proteins_in_consensus_per_organism(self):
         """
-        Analyze option 'a': Per organism, count proteins
-        with the corresponding consensus sequence.
+        Analyze option 'a': Per organism, 
+        count proteins with the corresponding consensus sequence.
 
         Returns:
             None
@@ -386,7 +387,7 @@ class BioAPP:
             print(f"{organism}: {len(sequence_count)}"
                   f" consensus sequences")
 
-        # if you would like to see a plot, uncomment the next part
+        # if you would like to see a plot, uncomment the next part:
         # self.show_plot(
         #     "total found consensus sequences per organism",
         #     "organism",
@@ -397,8 +398,8 @@ class BioAPP:
 
     def sequence_length_by_accession(self):
         """
-        Analyze option 'c': Per accession code, show the corresponding
-        sequence length.
+        Analyze option 'c': Per accession code, 
+        show the corresponding sequence length.
 
         Returns:
             None
@@ -444,11 +445,12 @@ class BioAPP:
         Returns:
             None
         """
-        self.text_output.delete(1.0, tk.END)  # Clear existing text
+        self.text_output.delete(1.0, tk.END)  # Clear text
 
         # Print sequence length per accession code
         self.text_output.insert(tk.END,
-                                "Sequence length per accession code:\n")
+                                "Sequence length per accession "
+                                "code:\n")
         for accession, length in data.items():
             self.text_output.insert(tk.END, f"{accession}: "
                                             f"{length} amino acids\n")
@@ -459,7 +461,7 @@ class BioAPP:
         Display a plot in the main app window.
 
         Args:
-            textual_data: contains the title, x_axis and y_axis of the 
+            textual_data: contains the title, x_axis and y_axis of the
             plot.
             data (dict): Data for the plot.
             row (int): Row position in the Tkinter grid.
