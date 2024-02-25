@@ -260,16 +260,16 @@ class BioAPP:
                                r"[LIMVA]")
 
             matches = []
-            for i in self.entries:
+            for entry in self.entries:
                 match_sequences = set(re.findall(prosite_pattern,
-                                                 i["SQ"]))
+                                                 entry["SQ"]))
                 if match_sequences:
-                    matches.append((i["OS"], match_sequences))
+                    matches.append((entry["OS"], match_sequences))
 
             return matches
 
-        except re.error as e:
-            return print(f"Regex error: {e}")
+        except re.error as error:
+            return print(f"Regex error: {error}")
 
     # FINISHED
     def analyze_data(self):
@@ -296,7 +296,7 @@ class BioAPP:
 
     def proteins_in_consensus_per_organism(self):
         """
-        Analyze option 'a': Per organism, 
+        Analyze option 'a': Per organism,
         count proteins with the corresponding consensus sequence.
 
         Returns:
@@ -372,10 +372,10 @@ class BioAPP:
             output_text = (f"{organism}: {len(sequences)}"
                            f" consensus sequences\n")
 
-            for i, sequence in enumerate(sequences, start=1):
-                if i <= 20:
+            for number, sequence in enumerate(sequences, start=1):
+                if number <= 20:
                     output_text += (f"  Consensus Sequence "
-                                    f"{i}: {sequence}\n")
+                                    f"{number}: {sequence}\n")
                 else:
                     break
 
@@ -398,7 +398,7 @@ class BioAPP:
 
     def sequence_length_by_accession(self):
         """
-        Analyze option 'c': Per accession code, 
+        Analyze option 'c': Per accession code,
         show the corresponding sequence length.
 
         Returns:
